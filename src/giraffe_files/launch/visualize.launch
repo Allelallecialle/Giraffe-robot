@@ -1,15 +1,15 @@
 <?xml version="1.0" ?>
 <launch>
      
-     <arg name="rviz_conf" default="&quot;$(find intro_robotics_labs)&quot;/rviz/config.rviz" />
-     <arg name="robot_name" default="ur4"/>
+     <arg name="rviz_conf" default="$(find giraffe_files)/rviz/config.rviz" />
+     <arg name="robot_name" default="$(find giraffe_files)/urdf/giraffe_robot.urdf.xacro"/>
      <arg name="test_joints" default="true"/>
 
      <!-- send the robot XML to param server -->
-     <param name="robot_description" command="$(find xacro)/xacro '$(find intro_robotics_labs)/urdf/$(arg robot_name).urdf'" />
+     <param name="robot_description" command="$(find xacro)/xacro '$(arg robot_name)'" />
     
     <!-- run rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_conf) -f base_link" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_conf) -f world_base" />
 
 	
      <!-- joint_state_publisher publish joint states from sliders-->

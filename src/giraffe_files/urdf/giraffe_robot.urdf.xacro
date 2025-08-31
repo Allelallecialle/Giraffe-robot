@@ -1,0 +1,136 @@
+<?xml version="1.0" ?>
+
+
+<robot name="giraffe_robot"  xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- parameters -->
+    <xacro:property name="ceiling_height" value="4.0"/>
+    <xacro:property name="base_radius" value="0.1"/>
+    <xacro:property name="base_length" value="0.1"/>
+    <xacro:property name="link_radius" value="0.05"/>
+    <xacro:property name="prismatic_length" value="3.0"/>  <!-- prismatic range -->
+    <xacro:property name="wrist_length" value="0.2"/>
+
+    <!-- materials -->
+    <!-- grey for links, blue for joints -->
+    <material name="Blue">
+        <color rgba="0 0 0.8 1"/>
+    </material>
+
+    <material name="Grey">
+        <color rgba="0.5 0.5 0.5 1"/>
+    </material>
+
+
+    <!-- world reference set at the center of the ceiling-->
+    <link name="world"/>
+    <joint name="world_base" type="fixed">
+        <parent link="world"/>
+        <child link="base_link"/>
+        <origin xyz="2.5 6.0 ${ceiling_height}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- base link (on the ceiling) -->
+    <link name="base_link">
+        <visual>
+            <geometry>
+                <box size="0.2 0.2 0.05"/>
+            </geometry>
+            <material name="Grey"/>
+        </visual>
+    </link>
+
+    <!-- yaw link (z axis) and joint -->
+    <link name="yaw_link">
+        <visual>
+            <geometry>
+                <cylinder length="0.1" radius="${link_radius}"/>
+            </geometry>
+            <material name="Blue"/>
+        </visual>
+    </link>
+
+    <joint name="yaw_joint" type="revolute">
+        <parent link="base_link"/>
+        <child link="yaw_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-3.14" upper="3.14" effort="10" velocity="1"/>
+    </joint>
+
+    <!-- pitch link (y axis) and joint -->
+    <link name="pitch_link">
+        <visual>
+            <geometry>
+                <cylinder length="0.1" radius="${link_radius}"/>
+            </geometry>
+             <material name="Blue"/>
+        </visual>
+    </link>
+
+    <joint name="pitch_joint" type="revolute">
+        <parent link="yaw_link"/>
+        <child link="pitch_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-1.57" upper="1.57" effort="10" velocity="1"/>
+    </joint>
+
+
+    <!-- prismatic link and joint -->
+    <link name="prismatic_link">
+        <visual>
+            <origin xyz="0 0 -${prismatic_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="${prismatic_length}" radius="${link_radius}"/>
+            </geometry>
+            <material name="Blue"/>
+        </visual>
+    </link>
+
+    <joint name="prismatic_joint" type="prismatic">
+        <parent link="pitch_link"/>
+        <child link="prismatic_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 -1"/>
+        <limit lower="0.0" upper="${prismatic_length}" effort="100" velocity="0.5"/>
+    </joint>
+
+
+    <!-- wrist link and 2 joints -->
+    <link name="wrist1_link">
+        <visual>
+            <geometry>
+                <cylinder length="${wrist_length}" radius="${link_radius}"/>
+            </geometry>
+            <material name="Grey"/>
+        </visual>
+    </link>
+
+    <joint name="wrist1" type="revolute">
+        <parent link="prismatic_link"/>
+        <child link="wrist1_link"/>
+        <origin xyz="0 0 -${prismatic_length/2}" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-1.57" upper="1.57" effort="5" velocity="1"/>
+    </joint>
+
+    <joint name="wrist2" type="revolute">
+        <parent link="wrist1_link"/>
+        <child link="microphone"/>
+        <origin xyz="0 0 -${wrist_length}" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit lower="-1.57" upper="1.57" effort="5" velocity="1"/>
+    </joint>
+
+    <!-- microphone orientation (end effector) -->
+     <link name="microphone">
+        <visual>
+            <geometry>
+                <sphere radius="0.05"/>
+            </geometry>
+            <material name="Grey"/>
+        </visual>
+    </link>
+
+</robot>
