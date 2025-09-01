@@ -2,7 +2,7 @@
 <launch>
      
      <arg name="rviz_conf" default="$(find giraffe_files)/rviz/config.rviz" />
-     <arg name="robot_name" default="$(find giraffe_files)/urdf/giraffe_robot.urdf.xacro"/>
+     <arg name="robot_name" default="$(find giraffe_files)/urdf/giraffe_robot.xacro"/>
      <arg name="test_joints" default="true"/>
 
      <!-- send the robot XML to param server -->

@@ -19,6 +19,6 @@ source ../devel/setup.bash
 ```
 - Run the code
 ```
-rosrun main.py
+rosrun giraffe_description main.py
 ```
 - Disable the rviz Grid for better visualization
