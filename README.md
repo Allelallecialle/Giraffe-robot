@@ -21,3 +21,4 @@ source ../devel/setup.bash
 ```
 rosrun main.py
 ```
+- Disable the rviz Grid for better visualization

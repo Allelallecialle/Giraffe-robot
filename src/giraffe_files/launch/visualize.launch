@@ -9,7 +9,7 @@
      <param name="robot_description" command="$(find xacro)/xacro '$(arg robot_name)'" />
     
     <!-- run rviz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_conf) -f world_base" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_conf) -f world" />
 
 	
      <!-- joint_state_publisher publish joint states from sliders-->
