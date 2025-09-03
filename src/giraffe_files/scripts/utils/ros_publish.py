@@ -23,7 +23,7 @@ class RosPub():
             #launch rviz node if not yet done will start roscore too
             uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
             roslaunch.configure_logging(uuid)
-            package = rospkg.RosPack().get_path('intro_robotics_labs') + '/launch/visualize.launch'
+            package = rospkg.RosPack().get_path('giraffe_files') + '/launch/visualize.launch'
             cli_args = [package, 'robot_name:='+robot_name, 'test_joints:=false']
             roslaunch_args = cli_args[1:]
             roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], roslaunch_args)]
@@ -79,7 +79,8 @@ class RosPub():
         except:
             self.fixedBaseRobot = True
             
-        msg.name = all_names[-robot.na:] #remove universe joint that is not active
+        #msg.name = all_names[-robot.na:] #remove universe joint that is not active
+        msg.name = robot.model.names[1:]  # skip universe joint. Previous line deprecated
         msg.position = q                
         msg.velocity = qd                
         msg.effort = tau              

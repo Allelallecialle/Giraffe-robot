@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on May 4 2021
 
-@author: ovillarreal
-"""
 from __future__ import print_function
 import numpy as np
 import os
@@ -16,22 +12,20 @@ import time as tm
 def setRobotParameters():
 
     # link lengths
-    l1 = 0.089159 # relative displacement of shoulder link frame along parent (base frame)  Z axis
-    l2 = 0.13585  # relative displacement of upper-arm link frame along the parent (shoulder link frame) Y axis
-    l3 = 0.425    # relative displacement of forearm link frame along the parent (upper-arm link frame) Z axis
-    l4 = 0.1197   # relative displacement of forearm link frame along the parent (upper-arm link frame) Y axis
-    l5 = 0.39225  # relative displacement of wrist_1_link frame along the parent (forearm-arm link frame) Z axis
-    l6 = 0.094    # relative displacement of ee frame along the parent (wrist_1_link link frame) Y axis
-    l7 = 0.068    # relative displacement of ee frame along the parent (wrist_1_link link frame) Z axis
+    l1 = 0.05/2 + 0.05 #base_link->yaw_link (from the center of the box (box_heigth/2) + radius of the sphere)
+    l2 = 0.0 # yaw_link->pitch_link (intersecting axis)
+    l3 = 0.05 + 5.5/2 #spheric joint->prismatic (from the center of the sphere (radius) to half of the prismatic arm)
+    l4 = 5.5/2 - 0.05 #prismatic->wrist1 (from half of the primastic link to the center of wrist1 joint (positioned on radius distance from the end of the prism arm))
+    l5 = 1.0 - 0.015#wrist1->wrist2 (wrist1 length. The center of wrist2 joint is attached to the end of wrist1 arm)
+    l6 = 0.015 #wrist2 joint radius
+    l7 = 0.015 + 0.1 + 2*0.03 #wrist2-> end of microphone: (from the center of wrist2 joint to the ee (radius of wrist2) + end effector's length (microphone length: cylinder+sphere)
     lengths = np.array([l1, l2, l3, l4, l5, l6, l7])
 
-    m0 = 4  # base link
-    m1 = 3.7 # shoulder link
-    m2 = 8.393 # upper-arm link
-    m3 = 2.275 # forearm link
-    m4 = 1.219 # wrist_1_link
 
-    link_masses = np.array([m0, m1, m2, m3, m4])
+    # masses
+    #set m0, m1 ...
+
+    #link_masses = np.array([m0, m1, m2, m3, m4, m5])
     
     # com of the links expressed in the respective link frame
     # com_link =  model.inertias[idx].lever (Pinocchio)
@@ -67,105 +61,121 @@ def setRobotParameters():
 
     coms = np.array([com0, com1, com2, com3, com4])
 
-    return lengths, inertia_tensors, link_masses, coms
+    return lengths
+    #, inertia_tensors, link_masses, coms
 
 
 def directKinematics(q):
-
     # define link lengths from urdf
-    link_length,_,_,_ = setRobotParameters()
-    l1 = link_length[0]  # shoulder Z axis
-    l2 = link_length[1]  # upper-arm Y axis
-    l3 = link_length[2]  # forearm Z axis
-    l4 = link_length[3]  # forearm Y axis
-    l5 = link_length[4]  # wrist_1_link Z axis
-    l6 = link_length[5]  # ee Y axis
-    l7 = link_length[6]  # ee Z axis
+    link_length = setRobotParameters()
+    #,_,_,_
+    l1 = link_length[0]
+    l2 = link_length[1]
+    l3 = link_length[2]
+    l4 = link_length[3]
+    l5 = link_length[4]
+    l6 = link_length[5]
+    l7 = link_length[6]
 
-    q1 = q[0] # shoulder_pan joint position
-    q2 = q[1] # shoulder_lift joint position
-    q3 = q[2] # elbow joint position
-    q4 = q[3] # wrist_1_joint joint position
+    q1 = q[0]
+    q2 = q[1]
+    d3 = q[2]   #prismatic
+    q4 = q[3]
+    q5 = q[4]
 
 
-    # LOCAL homogeneous transformation matrices (base link is 0)
+    # constants from URDF
+    ceiling_x, ceiling_y, ceiling_z = 2.5, 6.0, 4.0     #base_link ref
 
-    # shoulder link (1)
-    # rigid transform (translation along Z axis)
-    T_01r = np.array([[1, 0, 0, 0],
-                       [0, 1, 0, 0],
-                       [0, 0, 1, l1],
+
+    # LOCAL homogeneous transformation matrices
+
+    # base_link
+    # translation from world to ceiling
+    T_w_base = np.array([[1, 0, 0, ceiling_x],
+                       [0, 1, 0, ceiling_y],
+                       [0, 0, 1, ceiling_z],
                        [0, 0, 0, 1]])
-    # joint transform (rotation about Z axis)
-    T_1r1 = np.array([[math.cos(q1), -math.sin(q1), 0, 0],
-                      [math.sin(q1), math.cos(q1),  0, 0],
-                      [0,               0,              1, 0],
-                      [0,               0,              0, 1]])
-    # local hom. transform from link frame 0 to link frame 1
-    T_01 = T_01r.dot(T_1r1)
 
-
-
-    # upper-arm link (2)
-    # rigid transform (90deg rotation about Y axis, translation l2 along Y axis)
-    T_12r = np.array([[ 0, 0, 1,  0],
-                       [ 0, 1, 0, l2],
-                       [-1, 0, 0,  0],
+    # base_link->yaw_link
+    # joint rotation about z axis (q1), translation l1 along -z axis
+    T_base_yaw_t = np.array([[ 1, 0, 0, 0],
+                       [ 0,  1, 0, 0],
+                       [0, 0, 1,  -l1],
                        [ 0, 0, 0,  1]])
-    # joint transform (rotation about Y axis)
-    T_2r2 = np.array([[ math.cos(q2), 0, math.sin(q2),        0],
-                     [              0, 1,            0,        0],
-                     [-math.sin(q2), 0, math.cos(q2), 0],
-                     [              0, 0,              0, 1]])
-    # local hom. transform from link frame 1 to link frame 2
-    T_12 = T_12r.dot(T_2r2)
+    T_base_yaw_r = np.array([[ math.cos(q1), -math.sin(q1), 0, 0],
+                       [ math.sin(q1),  math.cos(q1), 0, 0],
+                       [0, 0, 1,  0],
+                       [ 0, 0, 0,  1]])
+    T_base_yaw = T_base_yaw_t.dot(T_base_yaw_r)
 
-
-    # forearm link (3)
-    # rigid transform (translation l3 along Zaxis, -l4 along Y axis)
-    T_23r = np.array([[1, 0, 0, 0],
-                       [0, 1, 0, -l4],
-                       [0, 0, 1, l3],
+    # yaw_link->pitch_link
+    # joint rotation about y axis (q2)
+    T_yaw_pitch = np.array([[math.cos(q2), 0, math.sin(q2), 0],
+                       [            0, 1,            0, 0],
+                       [-math.sin(q2), 0, math.cos(q2), 0],
                        [0, 0, 0, 1]])
 
-    # joint transform (rotation about Y axis)
-    T_3r3 = np.array([[ math.cos(q3) ,  0, math.sin(q3),   0],
-                       [            0,  1,            0,   0],
-                       [-math.sin(q3),  0, math.cos(q3),   0],
-                       [            0,  0,            0,   1]])
-    #local hom. transform from link frame 2 to link frame 3
-    T_23 = T_23r.dot(T_3r3)
+    #pitch_link->prismatic_link
+    # translation l3 along -z
+    T_pitch_prism_t = np.array([[1, 0, 0, 0],
+                                [0, 1, 0, 0],
+                                [0, 0, 1, -l3],
+                                [0, 0, 0, 1]])
+    # prismatic extension d3 along -z
+    T_pitch_prism_ext = np.array([[1, 0, 0, 0],
+                                [0, 1, 0, 0],
+                                [0, 0, 1, d3],
+                                [0, 0, 0, 1]])
+    T_pitch_prism = T_pitch_prism_t.dot(T_pitch_prism_ext)
 
+    # prismatic_link->wrist_1
+    # joint rotation about y axis (q4), translation of l4 along -z
+    T_prism_wrist1_t = np.array([[1, 0, 0, 0],
+                        [ 0, 1, 0, 0],
+                        [0, 0, 1, -l4],
+                        [ 0, 0, 0,  1]])
+    T_prism_wrist1_r = np.array([[math.cos(q4), 0, math.sin(q4), 0],
+                        [ 0, 1, 0, 0],
+                        [-math.sin(q4), 0, math.cos(q4), 0],
+                        [ 0, 0, 0,  1]])
+    T_prism_wrist1 = T_prism_wrist1_t.dot(T_prism_wrist1_r)
 
+    # wrist1->wrist2
+    # joint rotation about y axis (q5), translation of l6 along -z
+    T_wrist1_wrist2_t = np.array([[1, 0, 0, 0],
+                       [0,  1, 0, 0],
+                       [0,  0,  1, -l5],
+                        [ 0, 0, 0, 1]])
+    T_wrist1_wrist2_r = np.array([[math.cos(q5), 0, math.sin(q5), 0],
+                       [0,  1, 0, 0],
+                       [-math.sin(q5),  0,  math.cos(q5), 0],
+                        [ 0, 0, 0, 1]])
+    T_wrist1_wrist2 = T_wrist1_wrist2_t.dot(T_wrist1_wrist2_r)
 
-    # wrist_1 link (4)
-    # rigid transform (90 deg about Y axis, l5 translation along Z axis)
-    T_34r = np.array([[ 0, 0, 1,  0],
-                      [ 0, 1, 0,  0],
-                      [ -1, 0, 0,  l5],
-                      [ 0, 0, 0,  1]])
-    # joint transform  (rotation about Y axis)
-    T_4r4 = np.array([[ math.cos(q4), 0, math.sin(q4), 0],
-                     [              0, 1,              0, 0],
-                     [-math.sin(q4), 0, math.cos(q4), 0],
-                     [              0, 0,              0, 1]])
-    #local hom. transform from link frame 3 to link frame 4
-    T_34 = T_34r.dot(T_4r4)
-
-    # end-effector
-    # only rigid transform (rotation X => Y , Y => -X, translation l6 along Y axis, l7 along Z axis)
-    T_4e = np.array([[0,  -1, 0,  0],
-                     [1,   0, 0, l6],
-                     [0,   0, 1, l7],
+    # wrist2->end-effector
+    # only rigid translation -z of l6
+    T_wrist2_end_wrist2 = np.array([[1,  0, 0,  0],
+                     [0,   1, 0, 0],
+                     [0,   0, 1, -l6],
+                     [0,   0, 0,  1]])
+    #offset of microphone
+    T_wrist2_end_mic = np.array([[1,  0, 0,  0],
+                     [0,   1, 0, 0],
+                     [0,   0, 1, -l7],
                      [0,   0, 0,  1]])
 
-    # GLOBAL homogeneous transformation matrices
-    T_02 = T_01.dot(T_12)
-    T_03 = T_02.dot(T_23)
-    T_04 = T_03.dot(T_34)
-    T_0e = T_04.dot(T_4e)
+    T_wrist2_mic = T_wrist2_end_wrist2.dot(T_wrist2_end_mic)
 
-    return T_01, T_02, T_03, T_04, T_0e 
+    # GLOBAL homogeneous transformation matrices
+    T_w_jyaw = T_w_base.dot(T_base_yaw)
+    T_w_jpitch = T_w_jyaw.dot(T_yaw_pitch)
+    T_w_prism = T_w_jpitch.dot(T_pitch_prism)
+    T_w_wr1 = T_w_prism.dot(T_prism_wrist1)
+    T_w_wr2 = T_w_wr1.dot(T_wrist1_wrist2)
+    T_w_mic = T_w_wr2.dot(T_wrist2_mic)
+
+    return T_w_base, T_w_jyaw, T_w_jpitch, T_w_prism, T_w_wr1, T_w_wr2, T_w_mic
 
 '''
     This function computes the Geometric Jacobian of the end-effector expressed in the base link frame 
@@ -173,7 +183,7 @@ def directKinematics(q):
 def computeEndEffectorJacobian(q):
 
     # compute direct kinematics 
-    T_01, T_02, T_03, T_04, T_0e = directKinematics(q)
+    T_w_base, T_w_jyaw, T_w_jpitch, T_w_prism, T_w_wr, T_w_mic, T_w_t = directKinematics(q)
 
 
     # link position vectors
@@ -202,7 +212,7 @@ def computeEndEffectorJacobian(q):
     # Jacobian matrix and joint axes both expressed in the world frame) 
     J = np.vstack(( J_p, J_o))
 
-    return J,z1,z2,z3,z4
+    return J,z1,z2,z3,z4,z5
 
 
 def geometric2analyticJacobian(J,T_0e):

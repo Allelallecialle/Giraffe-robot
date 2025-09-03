@@ -17,6 +17,7 @@ from utils.kin_dyn_utils import geometric2analyticJacobian
 from utils.math_tools import Math
 import matplotlib.pyplot as plt
 from utils.common_functions import plotJoint
+import subprocess
 
 import conf as conf
 from kinematics import *
@@ -47,9 +48,7 @@ math_utils = Math()
 
 rospack = rospkg.RosPack()
 urdf_path = os.path.join(rospack.get_path("giraffe_files"), "urdf", "giraffe_robot.urdf")
-robot = pin.RobotWrapper.BuildFromURDF(urdf_path)
-data = robot.data
-model = robot.model
+robot = RobotWrapper.BuildFromURDF(urdf_path)
 
 # get the ID corresponding to the frame we want to control
 assert(robot.model.existFrame(conf.frame_name))
@@ -66,21 +65,15 @@ answer = input("What do you want to do?[vis/kin/dyn/tsp]\n")
 
 if answer.lower() == 'vis':
     print("Visualizing robot in RViz")    
-    ros_pub = RosPub(os.path.join(rospack.get_path("giraffe_files"), "urdf", "giraffe_robot"))
-    ros_pub.publish(robot, conf.q0, np.zeros(robot.nv)) 
+    
+    # execute bash command roslaunch. Ctrl+C to stop
+    subprocess.run("roslaunch giraffe_files visualize.launch", shell=True, executable="/bin/bash")
 
-    print("Press Ctrl+C to stop.")
-    while ros_pub is not None and not ros_pub.isShuttingDown():
-        try:
-            ros.sleep(1.0) 
-        except ros.ROSInterruptException:
-            break
-    print("RViZ visualization was stopped.")
 
 elif answer.lower() == 'kin':
     print("Testing direct and differential kinematics...")
     direct_kin_test(robot, frame_id, q, qd)
-    jacobian_test(frame_id, robot, q)
+    #jacobian_test(frame_id, robot, q)
 
 elif answer.lower() == 'dyn':
     pass

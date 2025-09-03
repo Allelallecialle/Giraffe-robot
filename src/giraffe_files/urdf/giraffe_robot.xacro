@@ -5,9 +5,11 @@
 
     <!-- parameters -->
     <xacro:property name="ceiling_height" value="4.0"/>
+    <xacro:property name="box_heigth" value="0.05"/>
     <xacro:property name="link_radius" value="0.05"/>
     <xacro:property name="prismatic_length" value="5.5"/>  <!-- prismatic range -->
     <xacro:property name="wrist_length" value="1"/>
+    <xacro:property name="wrist2_radius" value="0.015"/>
 
     <!-- materials -->
     <!-- grey for links, blue for joints -->
@@ -28,43 +30,40 @@
     </material>
 
     <link name="world"/>
-
-    <!-- floor 5x12 -->
+   
+   <!--floor 5x12 -->
     <link name="floor">
     <visual>
         <geometry>
         <box size="5 12 0.01"/> <!-- thin plane -->
         </geometry>
-        <origin xyz="2.5 6 0" rpy="0 0 0"/>
+        <origin xyz="2.5 6 -0.005" rpy="0 0 0"/>    <!-- in -z to perfectly center it -->
         <material name="Grey"/>
     </visual>
-    </link>
+    </link >
 
     <joint name="world_floor" type="fixed">
-    <parent link="world"/>
-    <child link="floor"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    </joint>
-
-
-    <!-- world reference set at the center of the ceiling-->
-    <joint name="world_base" type="fixed">
         <parent link="world"/>
-        <child link="base_link"/>
-        <origin xyz="2.5 6.0 ${ceiling_height}" rpy="0 0 0"/>
+        <child link="floor"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
 
     <!-- base link (on the ceiling) -->
     <link name="base_link">
         <visual>
             <geometry>
-                <box size="0.2 0.2 0.05"/>
+                <box size="0.2 0.2 ${box_heigth}"/>
             </geometry>
             <material name="Grey"/>
         </visual>
     </link>
-
     
+    <!-- world reference set at the center of the ceiling-->
+    <joint name="world_base" type="fixed">
+        <parent link="world"/>
+        <child link="base_link"/>
+        <origin xyz="2.5 6.0 ${ceiling_height}" rpy="0 0 0"/>
+    </joint>
 
     <!-- yaw link (z axis) and joint -->
     <link name="yaw_link">
@@ -79,7 +78,7 @@
     <joint name="yaw_joint" type="revolute">
         <parent link="base_link"/>
         <child link="yaw_link"/>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0.0 0.0 -${link_radius+box_heigth/2}" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="-${pi}" upper="${pi}" effort="10" velocity="1"/>
     </joint>
@@ -100,17 +99,17 @@
         <child link="pitch_link"/>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <axis xyz="0 1 0"/>
-        <limit lower="-${1*pi/3}" upper="0" effort="10" velocity="1"/> <!-- 30 degrees is enough, no need to arrive to the ceiling -->
+        <limit lower="-${pi/2}" upper="${pi/2}" effort="10" velocity="1"/> <!-- 30 degrees is enough, no need to arrive to the ceiling -->
     </joint>
 
 
     <!-- prismatic link and joint -->
     <link name="prismatic_link">
         <visual>
-            <origin xyz="0 0 -${prismatic_length/2}" rpy="0 0 0"/>
             <geometry>
                 <cylinder length="${prismatic_length}" radius="${link_radius}"/>
             </geometry>
+            <origin xyz="0 0 -${link_radius}" rpy="0 0 0"/>
             <material name="White"/>
         </visual>
     </link>
@@ -118,13 +117,13 @@
     <joint name="prismatic_joint" type="prismatic">
         <parent link="pitch_link"/>
         <child link="prismatic_link"/>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 -${prismatic_length/2}" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="0.0" upper="${prismatic_length}" effort="100" velocity="0.5"/>
     </joint>
 
 
-    <!-- microphone wrist link and 2 joints -->
+    <!-- wrist1 link and joint -->
     <link name="wrist1_link">
         <visual>
             <geometry>
@@ -138,14 +137,24 @@
     <joint name="wrist1" type="revolute">
         <parent link="prismatic_link"/>
         <child link="wrist1_link"/>
-        <origin xyz="0 0 -${prismatic_length}" rpy="0 0 0"/>
+        <origin xyz="0 0 -${prismatic_length/2}" rpy="0 0 0"/>
         <axis xyz="0 1 0"/>
         <limit lower="-${pi/2}" upper="${pi/2}" effort="5" velocity="1"/>
     </joint>
 
+    <!-- wrist2 link and joint -->
+    <link name="wrist2_link">
+        <visual>
+            <geometry>
+                <sphere radius="${wrist2_radius}"/>
+            </geometry>
+            <material name="Black"/>
+        </visual>
+    </link>
+
     <joint name="wrist2" type="revolute">
         <parent link="wrist1_link"/>
-        <child link="microphone"/>
+        <child link="wrist2_link"/>
         <origin xyz="0 0 -${wrist_length}" rpy="0 0 0"/>
         <axis xyz="0 1 0"/>
         <limit lower="-${pi/2}" upper="${pi/2}" effort="5" velocity="1"/>
@@ -155,24 +164,24 @@
      <link name="microphone">
         <visual>
             <geometry>
-                <sphere radius="0.015"/>
-            </geometry>
-            <material name="Black"/>
-        </visual>
-        <visual>
-            <geometry>
                 <cylinder length="0.1" radius="0.02"/>
             </geometry>
-            <origin xyz="0 0 -0.065" rpy="0 0 0"/>
+            <origin xyz="0 0 0.11" rpy="0 0 0"/>
             <material name="Grey"/>
         </visual>
         <visual>
             <geometry>
                 <sphere radius="0.03"/>
             </geometry>
-            <origin xyz="0 0 -0.145" rpy="0 0 0"/>
+            <origin xyz="0 0 0.03" rpy="0 0 0"/>
             <material name="Black"/>
         </visual>
     </link>
+
+    <joint name="mic_frame" type="fixed">
+        <parent link="wrist2_link"/>
+        <child link="microphone"/>
+        <origin xyz="0 0 -0.175" rpy="0 0 0"/>
+    </joint>
 
 </robot>

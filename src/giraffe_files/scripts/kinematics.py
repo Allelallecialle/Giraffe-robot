@@ -17,19 +17,18 @@ import matplotlib.pyplot as plt
 
 def direct_kin_test(robot, frame_id, q, qd):
     # direct kinematics function
-    T_w_base, T_w_jyaw, T_w_jpitch, T_w_prism, T_w_wr, T_w_mic, T_w_t = directKinematics(q)
+    T_w_base, T_w_jyaw, T_w_jpitch, T_w_prism, T_w_wr1, T_w_wr2, T_w_mic = directKinematics(q)
     # compare with Pinocchio built-in functions 
     robot.computeAllTerms(q, qd)
     x = robot.framePlacement(q, frame_id).translation
     o = robot.framePlacement(q, frame_id).rotation
-    position_diff = x - T_w_t[:3,3]
-    rotation_diff = o - T_w_t[:3,:3]
+    position_diff = x - T_w_mic[:3,3]
+    rotation_diff = o - T_w_mic[:3,:3]
     print("Direct Kinematics - ee position, difference with Pinocchio library:", position_diff)
     print("Direct Kinematics - ee orientation, difference with Pinocchio library:\n", rotation_diff)
     print("------------------------------------------")
 
 def jacobian_test(frame_id, robot, q):
-    _, _, _, _, _, _, T_w_t = directKinematics(q)
     J,z1,z2,z3,z4,z5 = computeEndEffectorJacobian(q)
     # compare with Pinocchio
     Jee = robot.frameJacobian(q, frame_id, pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)

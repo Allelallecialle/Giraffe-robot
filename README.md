@@ -3,7 +3,7 @@ This is the final project for the "Introduction to Robotics" course of Unitn. It
 
 ## How to run the code
 To initialize the ROS environment:
-- Ensure to have a ROS distribution (here used Noetic)
+- Ensure to have a ROS distribution (here used: Noetic)
 - Clone the repository
 - Compile the workspace with catkin
 ```
@@ -22,3 +22,5 @@ source ../devel/setup.bash
 rosrun giraffe_description main.py
 ```
 - Disable the rviz Grid for better visualization
+
+
