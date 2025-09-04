@@ -73,7 +73,7 @@ if answer.lower() == 'vis':
 elif answer.lower() == 'kin':
     print("Testing direct and differential kinematics...")
     direct_kin_test(robot, frame_id, q, qd)
-    #jacobian_test(frame_id, robot, q)
+    jacobian_test(frame_id, robot, q)
 
 elif answer.lower() == 'dyn':
     pass

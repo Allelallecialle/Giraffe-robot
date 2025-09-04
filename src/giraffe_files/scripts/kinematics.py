@@ -29,12 +29,13 @@ def direct_kin_test(robot, frame_id, q, qd):
     print("------------------------------------------")
 
 def jacobian_test(frame_id, robot, q):
-    J,z1,z2,z3,z4,z5 = computeEndEffectorJacobian(q)
+    _, _, _, _, _, _, T_w_mic = directKinematics(q)
+    J,z1,z2,d3,z4,z5 = computeEndEffectorJacobian(q)
     # compare with Pinocchio
     Jee = robot.frameJacobian(q, frame_id, pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
     jacobian_diff = J - Jee
     print("Direct Kinematics - ee Geometric Jacobian (6X4 matrix), difference with Pinocchio library:\n", jacobian_diff)
 
-    J_a = geometric2analyticJacobian(J, T_w_t)
+    J_a = geometric2analyticJacobian(J, T_w_mic)
     print("Geometric Jacobian:\n", J)
     print("Analytic Jacobian:\n", J_a)

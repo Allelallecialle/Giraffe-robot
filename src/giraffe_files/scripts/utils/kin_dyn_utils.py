@@ -183,42 +183,44 @@ def directKinematics(q):
 def computeEndEffectorJacobian(q):
 
     # compute direct kinematics 
-    T_w_base, T_w_jyaw, T_w_jpitch, T_w_prism, T_w_wr, T_w_mic, T_w_t = directKinematics(q)
+    T_w_base, T_w_jyaw, T_w_jpitch, T_w_prism, T_w_wr1, T_w_wr2, T_w_mic = directKinematics(q)
 
 
     # link position vectors
-    p_01 = T_01[:3,3]
-    p_02 = T_02[:3,3]
-    p_03 = T_03[:3,3]
-    p_04 = T_04[:3,3]
-    p_0e = T_0e[:3,3]
+    p_w_jyaw = T_w_jyaw[:3,3]
+    p_w_jpitch = T_w_jpitch[:3,3]
+    p_w_wr1 = T_w_wr1[:3,3]
+    p_w_wr2 = T_w_wr2[:3,3]
+    p_w_mic = T_w_mic[:3,3]
+
 
     # z vectors for rotations
-    z1 = T_01[:3,2] # Z axis
-    z2 = T_02[:3,1] # Y axis
-    z3 = T_03[:3,1] # Y axis
-    z4 = T_04[:3,1] # Y axis
+    z1 = T_w_jyaw[:3,2] # Z axis
+    z2 = T_w_jpitch[:3,1] # Y axis
+    d3 = T_w_prism[:3,2] # translation Z axis
+    z4 = T_w_wr1[:3,1] # Y axis
+    z5 = T_w_wr2[:3,1] # Y axis
 
     # vectors from link i to end-effector
-    p_0_1e = p_0e - p_01
-    p_0_2e = p_0e - p_02
-    p_0_3e = p_0e - p_03
-    p_0_4e = p_0e - p_04
+    p_w__jyaw_mic = p_w_mic - p_w_jyaw
+    p_w__jpitch_mic = p_w_mic - p_w_jpitch
+    p_w__wr1_mic = p_w_mic - p_w_wr1
+    p_w__wr2_mic = p_w_mic - p_w_wr2
 
-    # linear and angular part of Jacobian matrix
-    J_p = np.hstack((np.cross(z1,p_0_1e).reshape(3,1) , np.cross(z2,p_0_2e).reshape(3,1) , np.cross(z3,p_0_3e).reshape(3,1) , np.cross(z4,p_0_4e).reshape(3,1)  ))
-    J_o = np.hstack((z1.reshape(3,1), z2.reshape(3,1), z3.reshape(3,1), z4.reshape(3,1)))
+    # linear and angular part of Jacobian matrix. z3 (called d3 is the prismatic joint so J_p and J_o are computed accordingly)
+    J_p = np.hstack((np.cross(z1,p_w__jyaw_mic).reshape(3,1) , np.cross(z2,p_w__jpitch_mic).reshape(3,1) , d3.reshape(3, 1), np.cross(z4,p_w__wr1_mic).reshape(3,1) , np.cross(z5,p_w__wr2_mic).reshape(3,1) ))
+    J_o = np.hstack((z1.reshape(3,1), z2.reshape(3,1), np.zeros((3,1)), z4.reshape(3,1), z5.reshape(3,1)))
 
     # Jacobian matrix and joint axes both expressed in the world frame) 
     J = np.vstack(( J_p, J_o))
 
-    return J,z1,z2,z3,z4,z5
+    return J,z1,z2,d3,z4,z5
 
 
-def geometric2analyticJacobian(J,T_0e):
-    R_0e = T_0e[:3,:3]
+def geometric2analyticJacobian(J,T_w_mic):
+    R_w_mic = T_w_mic[:3,:3]
     math_utils = Math()
-    rpy_ee = math_utils.rot2eul(R_0e)
+    rpy_ee = math_utils.rot2eul(R_w_mic)
     roll = rpy_ee[0]
     pitch = rpy_ee[1]
     yaw = rpy_ee[2]
