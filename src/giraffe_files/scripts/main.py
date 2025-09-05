@@ -9,11 +9,7 @@ import time as tm
 import rospkg
 from utils.common_functions import *
 from utils.ros_publish import RosPub
-from utils.kin_dyn_utils import directKinematics
-from utils.kin_dyn_utils import computeEndEffectorJacobian
-from utils.kin_dyn_utils import numericalInverseKinematics as ik
-from utils.kin_dyn_utils import fifthOrderPolynomialTrajectory as coeffTraj
-from utils.kin_dyn_utils import geometric2analyticJacobian
+from utils.kin_utils import directKinematics, computeEndEffectorJacobian, numericalInverseKinematics
 from utils.math_tools import Math
 import matplotlib.pyplot as plt
 from utils.common_functions import plotJoint
@@ -43,7 +39,6 @@ q_des = conf.q0
 qd_des = conf.qd0
 qdd_des = conf.qdd0
 
-math_utils = Math()
 
 
 rospack = rospkg.RosPack()
@@ -74,6 +69,7 @@ elif answer.lower() == 'kin':
     print("Testing direct and differential kinematics...")
     direct_kin_test(robot, frame_id, q, qd)
     jacobian_test(frame_id, robot, q)
+    inv_kin_test(frame_id)
 
 elif answer.lower() == 'dyn':
     pass
