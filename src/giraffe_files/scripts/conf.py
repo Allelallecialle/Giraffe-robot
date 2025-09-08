@@ -8,7 +8,7 @@ frame_name = 'microphone'       # name of the frame to control (end-effector) in
 
 # Initial Conditions
 q0 =   np.array([0.0, -math.pi/3,  math.pi/6, -math.pi/3, 0.0]) # position
-qd0 =  np.array([0.0, -5.0, 0.5, 0.0, 0.0])                    # velocity
+qd0 =  np.array([0.0, 0.0, 0.0, 0.0, 0.0])                    # velocity
 qdd0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])                    # accelerations
 
 

@@ -12,7 +12,6 @@
     <xacro:property name="wrist2_radius" value="0.015"/>
 
     <!-- materials -->
-    <!-- grey for links, blue for joints -->
     <material name="Blue">
         <color rgba="0 0 0.8 1"/>
     </material>
@@ -28,6 +27,20 @@
     <material name="Black">
         <color rgba="0 0 0 1"/>
     </material>
+
+    <!-- params for inertia -->
+    <!-- chosen material for the robot: aluminum. ABS plastic for microphone -->
+    <xacro:property name="density_aluminum" value="2700.0"/>  <!-- density to compute mass (kg/m^3)-->
+    <xacro:property name="density_plastic" value="1030.0"/>  <!-- density to compute mass (kg/m^3)-->
+    <!-- masses of robot elements: density*volume -->
+    <xacro:property name="base_joint_mass" value="${density_aluminum * (4/3)*pi*pow(link_radius, 3)}"/>    <!-- unique sphere volume for joint 1 and 2 -->
+    <xacro:property name="prismatic_mass" value="${density_aluminum * pi*pow(link_radius, 2)*prismatic_length}"/>     <!-- sphere volume -->
+    <xacro:property name="wrist1_joint_mass" value="${density_aluminum* pi*pow(link_radius, 2)*wrist_length}"/>  <!-- cylinder volume -->
+    <xacro:property name="wrist1_mass" value="${density_aluminum* pi*pow(link_radius, 2)*wrist_length}"/>        <!-- cylinder volume -->
+    <xacro:property name="wrist2_joint_mass" value="${density_aluminum* (4/3)*pi*pow(wrist2_radius, 3)}"/>  <!-- sphere volume -->
+    <xacro:property name="mic_mass" value="${density_plastic* ((4/3)*pi*pow(0.03, 3) + pi*pow(0.02, 2)*0.1)}"/>    <!-- cylinder+sphere volume -->
+
+
 
     <link name="world"/>
    
@@ -73,6 +86,17 @@
             </geometry>
             <material name="White"/>
         </visual>
+
+        <inertial>
+            <mass value="${base_joint_mass/2}"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/> <!-- position in the center --> 
+            <inertia ixx="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}" 
+            ixy="0.0" 
+            ixz="0.0" 
+            iyy="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}" 
+            iyz="0.0" 
+            izz="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}"/>   <!-- inertia formula for full spheres -->
+        </inertial>
     </link>
 
     <joint name="yaw_joint" type="revolute">
@@ -92,6 +116,17 @@
             <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
             <material name="White"/>
         </visual>
+
+        <inertial>
+            <mass value="${base_joint_mass/2}"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/> <!-- position in the center --> 
+            <inertia ixx="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}" 
+            ixy="0.0" 
+            ixz="0.0" 
+            iyy="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}" 
+            iyz="0.0" 
+            izz="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}"/>   <!-- inertia formula for spheres -->
+        </inertial>
     </link>
 
     <joint name="pitch_joint" type="revolute">
@@ -99,7 +134,7 @@
         <child link="pitch_link"/>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <axis xyz="0 1 0"/>
-        <limit lower="-${pi/2}" upper="${pi/2}" effort="10" velocity="1"/> <!-- 30 degrees is enough, no need to arrive to the ceiling -->
+        <limit lower="-${pi/2}" upper="${pi/2}" effort="10" velocity="1"/>
     </joint>
 
 
@@ -112,6 +147,17 @@
             <origin xyz="0 0 -${link_radius}" rpy="0 0 0"/>
             <material name="White"/>
         </visual>
+
+        <inertial>
+            <mass value="${prismatic_mass}"/>
+            <origin xyz="0.0 0.0 -${prismatic_length/2}" rpy="0 0 0"/> <!-- position in the center --> 
+            <inertia ixx="${(1.0/12.0) * prismatic_mass * (3*pow(link_radius,2) + pow(prismatic_length, 2))}" 
+            ixy="0.0" 
+            ixz="0.0" 
+            iyy="${(1.0/12.0) * prismatic_mass * (3*pow(link_radius,2) + pow(prismatic_length, 2))}" 
+            iyz="0.0" 
+            izz="${(1.0/2.0) * prismatic_mass * pow(link_radius, 2)}"/>   <!-- inertia formula for cylinders (cylinder axis along z) -->
+        </inertial>                                                       <!-- izz=1/2mr^2 , ixx=iyy=1/12m(3r^2+L^2)-->
     </link>
 
     <joint name="prismatic_joint" type="prismatic">
@@ -132,6 +178,17 @@
             <origin xyz="0 0 -${wrist_length/2}" rpy="0 0 0"/>
             <material name="White"/>
         </visual>
+
+        <inertial>
+            <mass value="${wrist1_mass}"/>
+            <origin xyz="0.0 0.0 -${wrist_length/2}" rpy="0 0 0"/> <!-- position in the center --> 
+            <inertia ixx="${(1.0/12.0) * wrist1_mass * (3*pow(link_radius,2) + pow(wrist_length, 2))}" 
+            ixy="0.0" 
+            ixz="0.0" 
+            iyy="${(1.0/12.0) * wrist1_mass * (3*pow(link_radius,2) + pow(wrist_length, 2))}" 
+            iyz="0.0" 
+            izz="${(1.0/2.0) * wrist1_mass * pow(link_radius, 2)}"/>   <!-- inertia formula for cylinders (cylinder axis along z) -->
+        </inertial>          
     </link>
 
     <joint name="wrist1" type="revolute">
@@ -150,6 +207,17 @@
             </geometry>
             <material name="Black"/>
         </visual>
+
+        <inertial>
+            <mass value="${wrist2_joint_mass}"/>
+            <origin xyz="0.0 0.0 -${wrist2_radius/2}" rpy="0 0 0"/> <!-- position in the center --> 
+            <inertia ixx="${(2.0/5.0) * wrist2_joint_mass * pow(wrist2_radius, 2)}" 
+            ixy="0.0" 
+            ixz="0.0" 
+            iyy="${(2.0/5.0) * wrist2_joint_mass * pow(wrist2_radius, 2)}" 
+            iyz="0.0" 
+            izz="${(2.0/5.0) * wrist2_joint_mass * pow(wrist2_radius, 2)}"/>   <!-- inertia formula for spheres -->
+        </inertial>
     </link>
 
     <joint name="wrist2" type="revolute">
@@ -176,6 +244,18 @@
             <origin xyz="0 0 0.03" rpy="0 0 0"/>
             <material name="Black"/>
         </visual>
+
+        <inertial>      <!-- to simplify we approximate the inertia computation to a cylinder with the mic sphere's radius -->
+            <mass value="${mic_mass}"/>
+            <origin xyz="0 0 -0.08" rpy="0 0 0"/> <!-- center in the center of the approx cylinder (sphere radius+cylinder length)/2 -->
+            <inertia
+                ixx="${(1.0/12.0) * mic_mass * (3*pow(0.03,2) + pow(0.08,2))}"
+                ixy="0.0"
+                ixz="0.0"
+                iyy="${(1.0/12.0) * mic_mass * (3*pow(0.03,2) + pow(0.08,2))}"
+                iyz="0.0"
+                izz="${(1.0/2.0) * mic_mass * pow(0.03,2)}"/>
+        </inertial>
     </link>
 
     <joint name="mic_frame" type="fixed">

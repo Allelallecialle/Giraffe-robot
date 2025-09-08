@@ -59,10 +59,18 @@ print("[tsp] Simulation in task space")
 answer = input("What do you want to do?[vis/kin/dyn/tsp]\n")
 
 if answer.lower() == 'vis':
-    print("Visualizing robot in RViz")    
-    
-    # execute bash command roslaunch. Ctrl+C to stop
-    subprocess.run("roslaunch giraffe_files visualize.launch", shell=True, executable="/bin/bash")
+    ros_pub = RosPub("giraffe_robot")
+    print("Visualizing robot in RViz")
+
+    while (not ros.is_shutdown()):
+        # execute bash command roslaunch. Ctrl+C to stop
+        subprocess.run("roslaunch giraffe_files visualize.launch", shell=True, executable="/bin/bash")
+
+        if ros_pub.isShuttingDown():
+            print ("Shutting Down")
+            break
+
+    ros_pub.deregister_node()
 
 
 elif answer.lower() == 'kin':
@@ -72,7 +80,9 @@ elif answer.lower() == 'kin':
     inv_kin_test(frame_id)
 
 elif answer.lower() == 'dyn':
-    pass
+    print("Testing dynamics...")
+    dynamics_test(robot, frame_id)
+
 elif answer.lower() == 'tsp':
     pass
 

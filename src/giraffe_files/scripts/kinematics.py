@@ -43,7 +43,7 @@ def jacobian_test(frame_id, robot, q):
 
 def inv_kin_test(frame_id):
    
-    # randomized initial guess. This np function draws from the interval of values set by the first 2 parameters (360 degrees) 6 numbers (as the joints) that are our q0s.
+    # randomized initial guess. This np function draws from the interval of values set by the first 2 parameters (360 degrees) 4 numbers (the position values).
     q_i  = conf.q0
 
     p =  np.random.uniform(-np.pi, np.pi, 4)
