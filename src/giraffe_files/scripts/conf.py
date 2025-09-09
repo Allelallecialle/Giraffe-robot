@@ -7,12 +7,12 @@ SLOW_FACTOR = 1              # to slow down simulation
 frame_name = 'microphone'       # name of the frame to control (end-effector) in the URDF
 
 # Initial Conditions
-q0 =   np.array([0.0, -math.pi/3,  math.pi/6, -math.pi/3, 0.0]) # position
+q0 =   np.array([0.0, -math.pi/3,  2.75, -math.pi/3, 0.0]) # position
 qd0 =  np.array([0.0, 0.0, 0.0, 0.0, 0.0])                    # velocity
 qdd0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])                    # accelerations
 
 
-# Initial joint configuratio
+# Initial joint configuration of urdf
 qhome = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
 
 # End-Effector desired position [x, y, z]

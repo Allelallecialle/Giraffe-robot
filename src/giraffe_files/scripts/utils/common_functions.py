@@ -397,8 +397,8 @@ def plotJoint(name, time_log, q_log=None, q_des_log=None, qd_log=None, qd_des_lo
         njoints = min(plot_var_log.shape)
     elif plot_var_des_log is not None:
         njoints = min(plot_var_des_log.shape)
-    else:
-        print("no log var has been defined")
+    #else:
+        #print("no log var has been defined")
 
     if len(plt.get_fignums()) == 0:
         figure_id = 1
@@ -411,6 +411,7 @@ def plotJoint(name, time_log, q_log=None, q_des_log=None, qd_log=None, qd_des_lo
     else:
         fig.suptitle(name, fontsize=20)
 
+    njoints = 5
     if joint_names is None:
         if njoints <= 6:
             labels = labels_ur
