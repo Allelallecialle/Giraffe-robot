@@ -11,7 +11,7 @@ from utils.dyn_utils import getg, getM, getC, forward_dynamics
 from utils.ros_publish import RosPub
 import conf as conf
 
-def dynamics_test(robot, frame_id):
+def dynamics_test(robot, frame_id, ros_pub):
      # Init loggers
     q_log = np.empty((0, 5))
     q_des_log = np.empty((0, 5))
@@ -23,41 +23,51 @@ def dynamics_test(robot, frame_id):
     time_log = np.empty((0,))
     
     # desired positions set to the default initial positions in conf.py
-    q_des = conf.q0
-    qd_des = conf.qd0
-    qdd_des = conf.qdd0
+    q = conf.q0
+    qd = conf.qd0
+    qdd = conf.qdd0
 
     time = 0.0
-    dyn_sim_duration = 1.0
+    dyn_sim_duration = 2.0
 
-    # randomized initial guess of robot position. This np function draws from the interval of values set by the first 2 parameters (360 degrees) 5 numbers (as the joints) that are our q0s.
-    q = np.random.uniform(-np.pi, np.pi, 5)
-    qd = np.random.uniform(-np.pi, np.pi, 5)
-    qdd = np.random.uniform(-np.pi, np.pi, 5)
-    print(f"Initial random joint positions q: {q}")
-    print(f"Initial random joint velocities qd: {qd}")
-    print(f"Initial random joint accelerations qdd: {qdd}")
-
+    # randomized initial guess of robot position
+    q_des = np.array([
+    np.random.uniform(-np.pi, np.pi),     # yaw
+    np.random.uniform(-0.5, 0.5),         # pitch
+    np.random.uniform(0.0, 5.5),          # prismatic
+    np.random.uniform(-np.pi, np.pi),     # wrist 1
+    np.random.uniform(-np.pi, np.pi)      # wrist 2
+    ])
+    qd_des = np.zeros(5)
+    qdd_des = np.zeros(5)
+    print(f"Initial joint positions q: {q}")
+    print(f"Initial joint velocities qd: {qd}")
+    print(f"Initial joint accelerations qdd: {qdd}")
+    print("------------------------------------------")
+    print(f"Final random joint positions q: {q_des}")
+    print(f"Final random joint velocities qd: {qd_des}")
+    print(f"Final random joint accelerations qdd: {qdd_des}")
 
     # initialize Pinocchio variables
     robot.computeAllTerms(q, qd)
     joint_types = np.array(['revolute', 'revolute', 'prismatic', 'revolute', 'revolute'])
     # compute RNEA
-    tau = pin.rnea(robot.model, robot.data, q, qd, qdd)
+    tau = pin.rnea(robot.model, robot.data, q_des, qd_des, qdd_des)
     print(f"RNEA: {tau}")
 
     print("------------------------------------------")
-    # Compute g,M,C
-    # gravity terms
-    g = getg(q, robot, joint_types=joint_types)
+    # Compute g,M,C with pinocchio
+    # gravity term
+    g = robot.gravity(q)
     # compute joint space inertia matrix with Pinocchio
-    M = getM(q,robot,joint_types=joint_types)
-    # compute Coriolis term with Pinocchio
-    C = getC(q,qd,robot,joint_types=joint_types)
+    M = robot.mass(q, False)
+    # compute bias term with Pinocchio (C+g)
+    hp = robot.nle(q, qd, False)
 
     print(f"Gravity: {g}")
     print(f"Inertia M: {M}")
-    print(f"Coriolis C: {C}")
+    print(f"Coriolis C: {hp-g}")
+    print(f"Bias term h: {hp}")
     
     print("------------------------------------------")
     #Compute forward dynamics
@@ -96,9 +106,17 @@ def dynamics_test(robot, frame_id):
         
         # update time
         time = time + conf.dt
-                    
+     
         #publish joint variables
+        ros_pub.publish(robot, q, qd)
         tm.sleep(conf.dt*conf.SLOW_FACTOR)
+
+        # stops the while loop if  you prematurely hit CTRL+C
+        if ros_pub.isShuttingDown():
+            print ("Shutting Down")
+            break
+        
+    ros_pub.deregister_node()
     
     # Transpose the stacked arrays to plot correctly
     q_log = np.array(q_log).T
