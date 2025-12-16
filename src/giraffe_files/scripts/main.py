@@ -102,6 +102,8 @@ elif answer.lower() == 'pol':
     np.random.uniform(0.0, 4.0),     # z
     np.random.uniform(-np.pi, np.pi) # pitch
     ])
+    print("Initial task space position: ", q_i)
+    print("Desired position: ", p)
     # solution of the numerical ik
     q_f, log_err, log_grad = numericalInverseKinematics(p, q_i, line_search = False, wrap = False)
 
