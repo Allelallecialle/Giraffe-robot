@@ -86,7 +86,19 @@ elif answer.lower() == 'kin':
 
 elif answer.lower() == 'dyn':
     print("Testing dynamics...")
-    dynamics_test(robot, frame_id, ros_pub)
+    
+    # randomized initial guess of robot position
+    q_des = np.array([
+    np.random.uniform(-np.pi, np.pi),     # yaw
+    np.random.uniform(-np.pi/2, np.pi/2),         # pitch
+    np.random.uniform(-5.5/2, 5.5),          # prismatic
+    np.random.uniform(-np.pi/2, np.pi/2),     # wrist 1
+    np.random.uniform(-np.pi/2, np.pi/2)      # wrist 2
+    ])
+    qd_des = np.zeros(5)
+    qdd_des = np.zeros(5)
+
+    dynamics_test(robot, frame_id, ros_pub, q_des, qd_des, qdd_des)
 
 
 elif answer.lower() == 'pol':
