@@ -18,7 +18,7 @@ import subprocess
 
 import conf as conf
 from kinematics import *
-from task_space_control import * 
+from task_space_trajectory import * 
 from dynamics import * 
 
 
@@ -38,17 +38,6 @@ qd_log = np.empty((5))*nan
 qdd_log = np.empty((5))*nan
 time_log =  0
 
-q0 = conf.q0
-qd0 = conf.qd0
-qdd0 = conf.qdd0
-
-q = conf.q0
-qd = conf.qd0
-qdd = conf.qdd0
-
-q_des = conf.q0
-qd_des = conf.qd0
-qdd_des = conf.qdd0
 
 
 # get the ID corresponding to the frame we want to control
@@ -70,7 +59,7 @@ if answer.lower() == 'vis':
 
     while (not ros.is_shutdown()):
         # execute bash command roslaunch. Ctrl+C to stop
-        subprocess.run("roslaunch giraffe_files visualize.launch", shell=True, executable="/bin/bash")
+        subprocess.run("roslaunch giraffe_files visualize.launch", shell=False, executable="/bin/bash")
         if ros_pub.isShuttingDown():
             print ("Shutting Down")
             break
@@ -86,12 +75,12 @@ elif answer.lower() == 'kin':
 
 elif answer.lower() == 'dyn':
     print("Testing dynamics...")
-    
+
     # randomized initial guess of robot position
     q_des = np.array([
     np.random.uniform(-np.pi, np.pi),     # yaw
     np.random.uniform(-np.pi/2, np.pi/2),         # pitch
-    np.random.uniform(-5.5/2, 5.5),          # prismatic
+    np.random.uniform(0.0, 5.5),          # prismatic
     np.random.uniform(-np.pi/2, np.pi/2),     # wrist 1
     np.random.uniform(-np.pi/2, np.pi/2)      # wrist 2
     ])
@@ -103,29 +92,27 @@ elif answer.lower() == 'dyn':
 
 elif answer.lower() == 'pol':
     print("Simulating polynomial trajectory...")
-    pol_trj_simulation(robot, frame_id, ros_pub)
+        #randomize the final position setting boundaries of the room
+    p = np.array([
+    np.random.uniform(0.0, 5.0),     # x
+    np.random.uniform(0.0, 12.0),    # y
+    np.random.uniform(0.0, 4.0),     # z
+    np.random.uniform(-np.pi, np.pi) # pitch
+    ])
+    pol_trj_simulation(robot, frame_id, ros_pub, p)
     
 
 elif answer.lower() == 'tsp':
     print("Simulating task space trajectory...")
-    #ros_pub = RosPub("giraffe_robot")
-    #test_trajectory(robot, frame_id)
-    execute_pol_trj(robot, frame_id)
-
-
-    #pitch_des_final = conf.pitch_des_deg
-    #q_des = np.array([math.radians(45), -math.radians(10), 5.0, 0.0, math.radians(15)])
-    
-
+    p_des = conf.p_cart_des
+    rpy_des = conf.pitch_des_deg
+    task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
     
     
 
 else:
     print("Please input a valid option.")
 
-
-#if ros_pub and ros.is_shutdown():  
-#    ros_pub.deregister_node()
 
 print("Exiting main.py...")
 exit(0)

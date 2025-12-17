@@ -12,7 +12,7 @@ from utils.trajectory_utils import fifthOrderPolynomialTrajectory, compute_traje
 from utils.ros_publish import RosPub
 import conf as conf
 
-def pol_trj_simulation(robot, frame_id, ros_pub):
+def pol_trj_simulation(robot, frame_id, ros_pub, p):
     q0 = conf.q0
     qd0 = conf.qd0
     qdd0 = conf.qdd0
@@ -26,13 +26,6 @@ def pol_trj_simulation(robot, frame_id, ros_pub):
 
     # desired task space position
     q_i  = conf.q0
-    #randomize the final position setting boundaries of the room
-    p = np.array([
-    np.random.uniform(0.0, 5.0),     # x
-    np.random.uniform(0.0, 12.0),    # y
-    np.random.uniform(0.0, 4.0),     # z
-    np.random.uniform(-np.pi, np.pi) # pitch
-    ])
     print("Initial task space position: ", q_i)
     print("Desired position: ", p)
     # solution of the numerical ik

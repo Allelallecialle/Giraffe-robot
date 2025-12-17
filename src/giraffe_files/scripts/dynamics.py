@@ -72,11 +72,11 @@ def dynamics_test(robot, frame_id, ros_pub, q_des, qd_des, qdd_des):
         print("------------------------------------------")
         # Simulation of forward dynamics
         # Add damping to stop smoothly
-        damping =  -0.1 * qd
+        damping =  -20 * qd
         jl_K = 10000
         jl_D = 100
-        q_max = np.array([np.pi,   np.pi/2, 5.5, np.pi/2, np.pi/2])
         q_min = np.array([-np.pi, -np.pi/2, 0.0, -np.pi/2, -np.pi/2])
+        q_max = np.array([np.pi,   np.pi/2, 5.5, np.pi/2, np.pi/2])
         end_stop_tau = np.zeros(5)
         end_stop_tau =  (q > q_max) * (jl_K * (q_max - q) + jl_D * (-qd)) +  (q  < q_min) * (jl_K * (q_min - q) + jl_D * (-qd))
 
