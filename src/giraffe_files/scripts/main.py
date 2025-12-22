@@ -56,19 +56,21 @@ answer = input("What do you want to do?[vis/kin/pol/dyn/tsp]\n")
 
 if answer.lower() == 'vis':
     print("Visualizing robot in RViz")
+    # Ctrl+C to stop
+    ros_pub.publish(robot, conf.q0, np.zeros(robot.nv))
 
     while (not ros.is_shutdown()):
-        # execute bash command roslaunch. Ctrl+C to stop
-        subprocess.run("roslaunch giraffe_files visualize.launch", shell=False, executable="/bin/bash")
         if ros_pub.isShuttingDown():
             print ("Shutting Down")
             break
 
-    ros_pub.deregister_node()
-
 
 elif answer.lower() == 'kin':
     print("Testing direct and differential kinematics...")
+
+    q = conf.q0
+    qd = conf.qd0
+
     direct_kin_test(robot, frame_id, q, qd)
     jacobian_test(frame_id, robot, q)
     inv_kin_test(frame_id)
@@ -114,5 +116,7 @@ else:
     print("Please input a valid option.")
 
 
+if ros_pub is not None:
+    ros_pub.deregister_node()
 print("Exiting main.py...")
 exit(0)
