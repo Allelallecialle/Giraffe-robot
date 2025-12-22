@@ -45,7 +45,8 @@ def dynamics_test(robot, frame_id, ros_pub, q_des, qd_des, qdd_des):
     # Main loop to simulate dynamics
     while time < dyn_sim_duration:
         # compute RNEA
-        tau = pin.rnea(robot.model, robot.data, q_des, qd_des, qdd_des)
+        #tau = pin.rnea(robot.model, robot.data, q_des, qd_des, qdd_des)
+        tau = pin.rnea(robot.model, robot.data, q, qd, qdd)
         print(f"RNEA: {tau}")
 
         print("------------------------------------------")
@@ -58,12 +59,14 @@ def dynamics_test(robot, frame_id, ros_pub, q_des, qd_des, qdd_des):
         for i in range(5):
             ei = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
             ei[i] = 1
-            tau = pin.rnea(robot.model, robot.data, q, np.array([0,0,0,0,0]) ,ei)
+            tau = pin.rnea(robot.model, robot.data, q, np.array([0.0,0.0,0.0,0.0,0.0]) ,ei)
             M[:5,i] = tau - g
 
         # compute bias term with Pinocchio (C+g)
         h = robot.nle(q, qd, False)
-
+        
+        #shorten the output to make it more readable
+        np.set_printoptions(suppress=True, precision=3)
         print(f"Gravity: {g}")
         print(f"Inertia M: {M}")
         print(f"Coriolis C: {h - g}")
@@ -74,7 +77,7 @@ def dynamics_test(robot, frame_id, ros_pub, q_des, qd_des, qdd_des):
         # Add damping to stop smoothly
         damping =  -20 * qd
         jl_K = 10000
-        jl_D = 100
+        jl_D = 10
         q_min = np.array([-np.pi, -np.pi/2, 0.0, -np.pi/2, -np.pi/2])
         q_max = np.array([np.pi,   np.pi/2, 5.5, np.pi/2, np.pi/2])
         end_stop_tau = np.zeros(5)

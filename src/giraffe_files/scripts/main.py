@@ -51,6 +51,7 @@ print("[kin] Test kinematics")
 print("[pol] Simulation of random polynomial trajectory")
 print("[dyn] Simulation with RNEA")
 print("[tsp] Simulation in task space")
+print("[rtrj] Simulation of refined trajectory")
 
 answer = input("What do you want to do?[vis/kin/pol/dyn/tsp]\n")
 
@@ -111,6 +112,12 @@ elif answer.lower() == 'tsp':
     task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
     
     
+elif answer.lower() == 'rtrj':
+    print("Simulating task space trajectory...")
+    p_des = conf.p_cart_des
+    rpy_des = conf.pitch_des_deg
+    refined_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
+
 
 else:
     print("Please input a valid option.")
