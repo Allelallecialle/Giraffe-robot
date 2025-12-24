@@ -14,11 +14,10 @@ from utils.ros_publish import RosPub
 import conf as conf
 
 
-zero_cart = np.array([ 0.0, 0.0,0.0])
+zero_cart = np.array([0.0, 0.0, 0.0])
 
 #Function to compute the trajectory as in polynomial_trajecotry.py
-def task_space_trajectory(time, robot, frame_id):
-    rpy0 = pin.rpy.matrixToRpy(robot.data.oMf[frame_id].rotation)[1]
+def task_space_trajectory(time, robot, frame_id, p0, pitch0):
     pd0 = zero_cart
     pdd0 = zero_cart
 
@@ -27,11 +26,6 @@ def task_space_trajectory(time, robot, frame_id):
     pdd_des = zero_cart
     
     p_final = conf.p_cart_des
-
-    # Compute initial end effector position and velocity from q0
-    pin.forwardKinematics(robot.model, robot.data, conf.q0)
-    pin.updateFramePlacement(robot.model, robot.data, frame_id)
-    p0 = robot.data.oMf[frame_id].translation.copy()
 
     # if-else because we want to minimize the trj duration but maximum is 7s
     if time < conf.T:
@@ -42,7 +36,7 @@ def task_space_trajectory(time, robot, frame_id):
             pdd_des[i] = 2 * a[2] + 6 * a[3] * time + 12 * a[4] * time ** 2 + 20 * a[5] * time ** 3
             #p_des[i], pd_des[i], pdd_des[i] = fifth_order_poly(t, conf.T, p0[i], p_final[i])
 
-        a = fifthOrderPolynomialTrajectory(conf.T, rpy0, conf.pitch_des_deg)
+        a = fifthOrderPolynomialTrajectory(conf.T, pitch0, conf.pitch_des_deg)
         rpy_des= a[0] + a[1]*time + a[2]*time**2 + a[3]*time**3 + a[4]*time**4 + a[5]*time**5
         pd_rpy_des = a[1] + 2 * a[2] * time + 3 * a[3] * time ** 2 + 4 * a[4] * time ** 3 + 5 * a[5] * time ** 4
         pdd_rpy_des = 2 * a[2] + 6 * a[3] * time + 12 * a[4] * time ** 2 + 20 * a[5] * time ** 3
@@ -145,9 +139,14 @@ def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
     time = 0.0
     T = conf.T     # trajectory duration
 
+    # Compute initial end effector position and velocity from q0
+    pin.forwardKinematics(robot.model, robot.data, conf.q0)
+    pin.updateFramePlacement(robot.model, robot.data, frame_id)
+    p0 = robot.data.oMf[frame_id].translation.copy()
+    pitch0 = pin.rpy.matrixToRpy(robot.data.oMf[frame_id].rotation)[1]
 
     while time < T:
-        task_ref = task_space_trajectory(time, robot, frame_id)
+        task_ref = task_space_trajectory(time, robot, frame_id, p0, pitch0)
 
         qdd_task, M, h = task_space_computed_torque(robot.model, robot.data, q, qd, task_ref, frame_id)
 
