@@ -113,7 +113,7 @@ elif answer.lower() == 'prova':
     task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
     
     
-elif answer.lower() == 'trj':
+elif answer.lower() == 'tsp':
     print("Simulating task space trajectory...")
     p_des = conf.p_cart_des
     rpy_des = conf.pitch_des_deg

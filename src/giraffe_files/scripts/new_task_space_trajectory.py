@@ -16,28 +16,8 @@ import conf as conf
 
 zero_cart = np.array([ 0.0, 0.0,0.0])
 
-
-#DA SOSTITUIREEEE
-def fifth_order_poly(t, T, p0, pf):
-    """
-    Quintic polynomial with zero vel/acc at endpoints
-    """
-    a0 = p0
-    a1 = 0
-    a2 = 0
-    a3 = 10*(pf - p0)/T**3
-    a4 = -15*(pf - p0)/T**4
-    a5 = 6*(pf - p0)/T**5
-
-    p = a0 + a1*t + a2*t**2 + a3*t**3 + a4*t**4 + a5*t**5
-    v = a1 + 2*a2*t + 3*a3*t**2 + 4*a4*t**3 + 5*a5*t**4
-    a = 2*a2 + 6*a3*t + 12*a4*t**2 + 20*a5*t**3
-
-    return p, v, a
-
-
 #Function to compute the trajectory as in polynomial_trajecotry.py
-def task_space_trajectory(t, robot, frame_id, p0):
+def task_space_trajectory(time, robot, frame_id):
     rpy0 = pin.rpy.matrixToRpy(robot.data.oMf[frame_id].rotation)[1]
     pd0 = zero_cart
     pdd0 = zero_cart
@@ -48,17 +28,25 @@ def task_space_trajectory(t, robot, frame_id, p0):
     
     p_final = conf.p_cart_des
 
+    # Compute initial end effector position and velocity from q0
+    pin.forwardKinematics(robot.model, robot.data, conf.q0)
+    pin.updateFramePlacement(robot.model, robot.data, frame_id)
+    p0 = robot.data.oMf[frame_id].translation.copy()
+
     # if-else because we want to minimize the trj duration but maximum is 7s
-    if t < conf.T:
-        
-        
-
+    if time < conf.T:
         for i in range(3):
-            #p_des[i], pd_des[i], pdd_des[i] = compute_trajectory(p0[i], p_des[i], conf.T, t)
-            p_des[i], pd_des[i], pdd_des[i] = fifth_order_poly(t, conf.T, p0[i], p_final[i])
+            a = fifthOrderPolynomialTrajectory(conf.T, p0[i], p_final[i])
+            p_des[i] = a[0] + a[1]*time + a[2]*time**2 + a[3]*time**3 + a[4]*time**4 + a[5]*time**5
+            pd_des[i] = a[1] + 2 * a[2] * time + 3 * a[3] * time ** 2 + 4 * a[4] * time ** 3 + 5 * a[5] * time ** 4
+            pdd_des[i] = 2 * a[2] + 6 * a[3] * time + 12 * a[4] * time ** 2 + 20 * a[5] * time ** 3
+            #p_des[i], pd_des[i], pdd_des[i] = fifth_order_poly(t, conf.T, p0[i], p_final[i])
 
-        #rpy_des, pd_rpy_des, pdd_rpy_des = compute_trajectory(rpy0, conf.rpy_des, conf.T, t)
-        rpy_des, pd_rpy_des, pdd_rpy_des = fifth_order_poly(t, conf.T, rpy0, conf.pitch_des_deg)
+        a = fifthOrderPolynomialTrajectory(conf.T, rpy0, conf.pitch_des_deg)
+        rpy_des= a[0] + a[1]*time + a[2]*time**2 + a[3]*time**3 + a[4]*time**4 + a[5]*time**5
+        pd_rpy_des = a[1] + 2 * a[2] * time + 3 * a[3] * time ** 2 + 4 * a[4] * time ** 3 + 5 * a[5] * time ** 4
+        pdd_rpy_des = 2 * a[2] + 6 * a[3] * time + 12 * a[4] * time ** 2 + 20 * a[5] * time ** 3
+        #rpy_des, pd_rpy_des, pdd_rpy_des = fifth_order_poly(t, conf.T, rpy0, conf.pitch_des_deg)
 
     else:
         p_des = p_des
@@ -157,13 +145,9 @@ def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
     time = 0.0
     T = conf.T     # trajectory duration
 
-    # Compute initial end effector position and velocity from q0
-    pin.forwardKinematics(robot.model, robot.data, conf.q0)
-    pin.updateFramePlacement(robot.model, robot.data, frame_id)
-    p0 = robot.data.oMf[frame_id].translation.copy()
 
     while time < T:
-        task_ref = task_space_trajectory(time, robot, frame_id, p0)
+        task_ref = task_space_trajectory(time, robot, frame_id)
 
         qdd_task, M, h = task_space_computed_torque(robot.model, robot.data, q, qd, task_ref, frame_id)
 
