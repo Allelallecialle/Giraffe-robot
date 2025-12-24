@@ -11,6 +11,7 @@ from utils.ros_publish import RosPub
 from utils.kin_utils import directKinematics, computeEndEffectorJacobian, numericalInverseKinematics
 from utils.trajectory_utils import fifthOrderPolynomialTrajectory, compute_trajectory
 from polynomial_trajectory import pol_trj_simulation
+from new_task_space_trajectory import run_task_simulation, test_simulation
 from utils.math_tools import Math
 import matplotlib.pyplot as plt
 from utils.common_functions import plotJoint
@@ -105,18 +106,20 @@ elif answer.lower() == 'pol':
     pol_trj_simulation(robot, frame_id, ros_pub, p)
     
 
-elif answer.lower() == 'tsp':
+elif answer.lower() == 'prova':
     print("Simulating task space trajectory...")
     p_des = conf.p_cart_des
     rpy_des = conf.pitch_des_deg
     task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
     
     
-elif answer.lower() == 'rtrj':
+elif answer.lower() == 'trj':
     print("Simulating task space trajectory...")
     p_des = conf.p_cart_des
     rpy_des = conf.pitch_des_deg
-    refined_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
+    #refined_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
+    q_final, qd_final = run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
+    test_simulation(robot, frame_id, p_des, rpy_des, q_final, qd_final)
 
 
 else:
