@@ -90,12 +90,12 @@
         <inertial>
             <mass value="${base_joint_mass/2}"/>
             <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/> <!-- position in the center --> 
-            <inertia ixx="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}" 
+            <inertia ixx="${(2.0/5.0) * (base_joint_mass/2) * pow(link_radius, 2)}" 
             ixy="0.0" 
             ixz="0.0" 
-            iyy="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}" 
+            iyy="${(2.0/5.0) * (base_joint_mass/2) * pow(link_radius, 2)}" 
             iyz="0.0" 
-            izz="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}"/>   <!-- inertia formula for full spheres -->
+            izz="${(2.0/5.0) * (base_joint_mass/2) * pow(link_radius, 2)}"/>   <!-- inertia formula for full spheres -->
         </inertial>
     </link>
 
@@ -119,13 +119,13 @@
 
         <inertial>
             <mass value="${base_joint_mass/2}"/>
-            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/> <!-- position in the center --> 
-            <inertia ixx="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}" 
+            <origin xyz="0.0 0.0 0.0" rpy="0 ${pi/2} 0"/> <!-- position in the center --> 
+            <inertia ixx="${(2.0/5.0) * (base_joint_mass/2) * pow(link_radius, 2)}" 
             ixy="0.0" 
             ixz="0.0" 
-            iyy="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}" 
+            iyy="${(2.0/5.0) * (base_joint_mass/2) * pow(link_radius, 2)}" 
             iyz="0.0" 
-            izz="${(2.0/5.0) * base_joint_mass * pow(link_radius, 2)}"/>   <!-- inertia formula for spheres -->
+            izz="${(2.0/5.0) * (base_joint_mass/2) * pow(link_radius, 2)}"/>   <!-- inertia formula for spheres -->
         </inertial>
     </link>
 
@@ -163,7 +163,7 @@
     <joint name="prismatic_joint" type="prismatic">
         <parent link="pitch_link"/>
         <child link="prismatic_link"/>
-        <origin xyz="0 0 -${prismatic_length/2}" rpy="0 0 0"/>
+        <origin xyz="0 0 -${prismatic_length/2}" rpy="0 0 0"/> <!--xyz="0 0 -${prismatic_length/2}-->
         <axis xyz="0 0 1"/>
         <limit lower="0.0" upper="${prismatic_length}" effort="100" velocity="0.5"/>
     </joint>

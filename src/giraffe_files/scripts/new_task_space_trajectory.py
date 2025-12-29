@@ -18,12 +18,9 @@ zero_cart = np.array([0.0, 0.0, 0.0])
 
 #Function to compute the trajectory as in polynomial_trajecotry.py
 def task_space_trajectory(time, robot, frame_id, p0, pitch0):
-    pd0 = zero_cart
-    pdd0 = zero_cart
-
-    p_des = zero_cart
-    pd_des = zero_cart
-    pdd_des = zero_cart
+    p_des = np.zeros(3)
+    pd_des = np.zeros(3)
+    pdd_des = np.zeros(3)
     
     p_final = conf.p_cart_des
 
@@ -129,12 +126,12 @@ def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
     p = conf.q0
     pd = conf.qd0
     pdd = conf.qdd0
-    rpy = zero_cart
+    rpy = np.zeros(3)
     # initialize reference variables
     p_des = p_des
     rpy_des = rpy_des
-    pd_des = zero_cart
-    pdd_des = zero_cart
+    pd_des = np.zeros(3)
+    pdd_des = np.zeros(3)
 
     time = 0.0
     T = conf.T     # trajectory duration

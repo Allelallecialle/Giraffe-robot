@@ -56,11 +56,12 @@ def dynamics_test(robot, frame_id, ros_pub, q_des, qd_des, qdd_des):
 
         # compute joint space inertia matrix with Pinocchio
         M  = np.zeros((5,5))
-        for i in range(5):
-            ei = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
-            ei[i] = 1
-            tau = pin.rnea(robot.model, robot.data, q, np.array([0.0,0.0,0.0,0.0,0.0]) ,ei)
-            M[:5,i] = tau - g
+        M = robot.mass(q, False)
+        #for i in range(5):
+        #   ei = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+        #   ei[i] = 1
+        #   tau = pin.rnea(robot.model, robot.data, q, np.array([0.0,0.0,0.0,0.0,0.0]) ,ei)
+        #   M[:5,i] = tau - g
 
         # compute bias term with Pinocchio (C+g)
         h = robot.nle(q, qd, False)
@@ -84,7 +85,8 @@ def dynamics_test(robot, frame_id, ros_pub, q_des, qd_des, qdd_des):
         end_stop_tau =  (q > q_max) * (jl_K * (q_max - q) + jl_D * (-qd)) +  (q  < q_min) * (jl_K * (q_min - q) + jl_D * (-qd))
 
         #compute accelerations from torques
-        final_tau = end_stop_tau + damping 
+        final_tau = end_stop_tau + damping + g
+
         qdd = np.linalg.inv(M).dot(final_tau - h)
 
         print("------------------------------------------")

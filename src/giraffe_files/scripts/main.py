@@ -24,7 +24,7 @@ from dynamics import *
 
 
 rospack = rospkg.RosPack()
-urdf_path = os.path.join(rospack.get_path("giraffe_files"), "urdf", "giraffe_robot.urdf")
+urdf_path = os.path.join(rospack.get_path("giraffe_files"), "urdf", "giraffe_robot_NEW.urdf")
 robot = RobotWrapper.BuildFromURDF(urdf_path)
 ros_pub = RosPub(urdf_path)
 
