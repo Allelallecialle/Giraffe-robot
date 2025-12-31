@@ -11,7 +11,6 @@ from utils.ros_publish import RosPub
 from utils.kin_utils import directKinematics, computeEndEffectorJacobian, numericalInverseKinematics
 from utils.trajectory_utils import fifthOrderPolynomialTrajectory, compute_trajectory
 from polynomial_trajectory import pol_trj_simulation
-from new_task_space_trajectory import run_task_simulation, test_simulation
 from utils.math_tools import Math
 import matplotlib.pyplot as plt
 from utils.common_functions import plotJoint
@@ -24,7 +23,7 @@ from dynamics import *
 
 
 rospack = rospkg.RosPack()
-urdf_path = os.path.join(rospack.get_path("giraffe_files"), "urdf", "giraffe_robot_NEW.urdf")
+urdf_path = os.path.join(rospack.get_path("giraffe_files"), "urdf", "giraffe_robot.urdf")
 robot = RobotWrapper.BuildFromURDF(urdf_path)
 ros_pub = RosPub(urdf_path)
 
@@ -52,7 +51,6 @@ print("[kin] Test kinematics")
 print("[pol] Simulation of random polynomial trajectory")
 print("[dyn] Simulation with RNEA")
 print("[tsp] Simulation in task space")
-print("[rtrj] Simulation of refined trajectory")
 
 answer = input("What do you want to do?[vis/kin/pol/dyn/tsp]\n")
 
@@ -105,21 +103,14 @@ elif answer.lower() == 'pol':
     ])
     pol_trj_simulation(robot, frame_id, ros_pub, p)
     
-
-elif answer.lower() == 'prova':
-    print("Simulating task space trajectory...")
-    p_des = conf.p_cart_des
-    rpy_des = conf.pitch_des_deg
-    task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
-    
     
 elif answer.lower() == 'tsp':
     print("Simulating task space trajectory...")
     p_des = conf.p_cart_des
     rpy_des = conf.pitch_des_deg
-    #refined_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
-    q_final, qd_final = run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
-    test_simulation(robot, frame_id, p_des, rpy_des, q_final, qd_final)
+    q_final, qd_final, time, time_log, p_log, p_des_log, pitch_log, pitch_des_log = run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des)
+    test_simulation(robot, frame_id, p_des, rpy_des, q_final, qd_final, time)
+    plot_simulation(time_log, p_log, p_des_log, pitch_log, pitch_des_log)
 
 
 else:
