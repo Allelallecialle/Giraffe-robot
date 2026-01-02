@@ -76,7 +76,7 @@ def task_space_computed_torque(robot, model, data, q, qd, task_ref, frame_id):
     e_rpy_d = pd_rpy_des - pd_rpy
     task_vel_error = np.hstack([e_pd, e_rpy_d])
 
-    # computed torque control: edd + Kd*ed + Kp*e = 0
+    # computed torque control: pdd + Kd*ed + Kp*e
     pdd_task = pdd_des + conf.Kd_pos @ e_pd + conf.Kp_pos @ e_p
     pdd_rpy_task = pdd_rpy_des + conf.Kd_pitch * e_rpy_d + conf.Kp_pitch * e_rpy
     total_error_pdd = np.hstack([pdd_task, pdd_rpy_task])
@@ -126,9 +126,9 @@ def postural_task(model, data, pitch_des_final, frame_id):
         qd_ik = -J_inv_posture @ total_error
         q_ik = pin.integrate(model, q_ik, qd_ik * conf.dt)
 
-    q0_calibrated = q_ik.copy()
+    q0_computed = q_ik.copy()
 
-    return q0_calibrated
+    return q0_computed
 
 #Function for the null space postural task (point 7 of the assignmnet)
 def null_space_posture(q, qd, J_task, q0_computed):
@@ -143,7 +143,9 @@ def null_space_posture(q, qd, J_task, q0_computed):
 
 # Function to run the actual simulation
 def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
-    q0 = conf.q0
+    q0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0]) 
+    # Uncomment to start from the homing config and not q0=[0,0,0,0,0]:
+    #q0 = conf.q0   
     qd0 = conf.qd0
     qdd0 = conf.qdd0
 
@@ -167,6 +169,15 @@ def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
     p_des_log = []
     pitch_log = []
     pitch_des_log = []
+    # Init loggers
+    q_log = np.empty((0, 5))
+    q_des_log = np.empty((0, 5))
+    qd_log = np.empty((0, 5))
+    qd_des_log = np.empty((0, 5))
+    qdd_log = np.empty((0, 5))
+    qdd_des_log = np.empty((0, 5))
+    tau_log = np.empty((0, 5))
+    
 
     time = 0.0
     T = conf.T     # trajectory duration
@@ -202,13 +213,23 @@ def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
         time = time + conf.dt
         tm.sleep(conf.dt*conf.SLOW_FACTOR)
 
-        #for plot
+        #for plots
         pin.forwardKinematics(robot.model, robot.data, q, qd)
         pin.updateFramePlacement(robot.model, robot.data, frame_id)
         p_curr = robot.data.oMf[frame_id].translation.copy()
         pitch_curr = pin.rpy.matrixToRpy(robot.data.oMf[frame_id].rotation)[1]
+        # Log Data into a vector
+        time_log = np.append(time_log, time)
+        q_log = np.vstack((q_log, q))
+        q_des_log= np.vstack((q_des_log, q))
+        qd_log= np.vstack((qd_log, qd))
+        qd_des_log= np.vstack((qd_des_log, qd))
+        qdd_log= np.vstack((qdd_log, qdd))
+        qdd_des_log= np.vstack((qdd_des_log, qdd))
+        tau_log = np.vstack((tau_log, tau))
+        
 
-        time_log.append(time)
+        #time_log.append(time)
         p_log.append(p_curr)
         p_des_log.append(task_ref[0])
         pitch_log.append(pitch_curr)
@@ -219,11 +240,18 @@ def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
             print ("Shutting Down")
             break
     return (q, qd, time,
-        np.array(time_log),
+        time_log,
         np.array(p_log),
         np.array(p_des_log),
         np.array(pitch_log),
-        np.array(pitch_des_log))
+        np.array(pitch_des_log),
+        q_log,
+        q_des_log,
+        qd_log,
+        qd_des_log,
+        qdd_log,
+        qdd_des_log,
+        tau_log)
 
 
 def test_simulation(robot, frame_id, p_des, rpy_des, q_final, qd_final, time):
@@ -240,11 +268,30 @@ def test_simulation(robot, frame_id, p_des, rpy_des, q_final, qd_final, time):
     print("Pitch desired:", np.degrees(conf.pitch_des_deg))
     print("Time: ", time)
 
-def plot_simulation(time_log, p_log, p_des_log, pitch_log, pitch_des_log):
+def plot_simulation(time_log, p_log, p_des_log, pitch_log, pitch_des_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log):
+    # Transpose the stacked arrays to plot correctly
+    q_log = np.array(q_log).T
+    qd_log = np.array(qd_log).T
+    qdd_log = np.array(qdd_log).T
+    q_des_log = np.array(q_des_log).T
+    qd_des_log = np.array(qd_des_log).T
+    qdd_des_log = np.array(qdd_des_log).T
+    tau_log = np.array(tau_log).T
+
+    # plot joint variables in 4 graphs
+    plotJoint('position', time_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log)
+    plt.figure(1)
+    plotJoint('velocity', time_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log)
+    plt.figure(2)
+    plotJoint('acceleration', time_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log)
+    plt.figure(3)
+    plotJoint('torque', time_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log)
+    plt.figure(4)
+    input("Press enter to continue")
     pos_error = np.linalg.norm(p_log - p_des_log, axis=1)
     pitch_error = pitch_log - pitch_des_log
 
-    plt.figure()
+    plt.figure(5)
     plt.plot(time_log, pos_error)
     plt.axhline(0.02, linestyle='--')  # tolerance band
     plt.xlabel("Time [s]")
@@ -252,7 +299,7 @@ def plot_simulation(time_log, p_log, p_des_log, pitch_log, pitch_des_log):
     plt.title("Cartesian position error")
     plt.grid()
 
-    plt.figure()
+    plt.figure(6)
     plt.plot(time_log, pitch_error)
     plt.axhline(0.01, linestyle='--')
     plt.axhline(-0.01, linestyle='--')
@@ -263,4 +310,4 @@ def plot_simulation(time_log, p_log, p_des_log, pitch_log, pitch_des_log):
 
     plt.show()
     #to not close plots immediately
-    input("Press ENTER to continue")
+    input("Press enter to continue")

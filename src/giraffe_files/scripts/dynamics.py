@@ -87,12 +87,13 @@ def dynamics_test(robot, frame_id, ros_pub, q_des, qd_des, qdd_des):
         #compute accelerations from torques
         final_tau = end_stop_tau + damping + g
 
-        qdd = np.linalg.inv(M).dot(final_tau - h)
+        #qdd = np.linalg.inv(M).dot(final_tau - h)
+        qdd = forward_dynamics(robot,joint_types,final_tau,q,qd)
 
         print("------------------------------------------")
-        #Compute forward dynamics
-        qdd_fd = forward_dynamics(robot,joint_types,final_tau,q,qd)
-        print(f"Joint acceleration qdd_fd computed by forward dynamics: {qdd_fd}")
+        #Compute forward dynamics with native function (aba is more efficient as said in theory part)
+        qdd_fd = pin.aba(robot.model, robot.data, q, qd, final_tau)
+        print(f"Joint acceleration qdd_fd computed by native function: {qdd_fd}")
         #Compare the input acceleration and the one computed with forward dynamics
         print(f"Difference of accelerations. Input qdd - qdd forward dynamics (qdd_fd-qdd): {qdd_fd - qdd}")
 

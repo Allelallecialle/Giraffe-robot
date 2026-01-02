@@ -34,7 +34,7 @@ def jacobian_test(frame_id, robot, q):
     # compare with Pinocchio
     Jee = robot.frameJacobian(q, frame_id, pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
     jacobian_diff = J - Jee
-    print("Direct Kinematics - ee Geometric Jacobian (6X4 matrix), difference with Pinocchio library:\n", jacobian_diff)
+    print("Direct Kinematics - ee Geometric Jacobian (6X5 matrix), difference with Pinocchio library:\n", jacobian_diff)
 
     J_a = geometric2analyticJacobian(J, T_w_mic)
     print("Geometric Jacobian:\n", J)
