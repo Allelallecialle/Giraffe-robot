@@ -171,11 +171,8 @@ def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
     pitch_des_log = []
     # Init loggers
     q_log = np.empty((0, 5))
-    q_des_log = np.empty((0, 5))
     qd_log = np.empty((0, 5))
-    qd_des_log = np.empty((0, 5))
     qdd_log = np.empty((0, 5))
-    qdd_des_log = np.empty((0, 5))
     tau_log = np.empty((0, 5))
     
 
@@ -221,11 +218,8 @@ def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
         # Log Data into a vector
         time_log = np.append(time_log, time)
         q_log = np.vstack((q_log, q))
-        q_des_log= np.vstack((q_des_log, q))
         qd_log= np.vstack((qd_log, qd))
-        qd_des_log= np.vstack((qd_des_log, qd))
         qdd_log= np.vstack((qdd_log, qdd))
-        qdd_des_log= np.vstack((qdd_des_log, qdd))
         tau_log = np.vstack((tau_log, tau))
         
 
@@ -246,11 +240,8 @@ def run_task_simulation(robot, frame_id, ros_pub, p_des, rpy_des):
         np.array(pitch_log),
         np.array(pitch_des_log),
         q_log,
-        q_des_log,
         qd_log,
-        qd_des_log,
         qdd_log,
-        qdd_des_log,
         tau_log)
 
 
@@ -268,24 +259,21 @@ def test_simulation(robot, frame_id, p_des, rpy_des, q_final, qd_final, time):
     print("Pitch desired:", np.degrees(conf.pitch_des_deg))
     print("Time: ", time)
 
-def plot_simulation(time_log, p_log, p_des_log, pitch_log, pitch_des_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log):
+def plot_simulation(time_log, p_log, p_des_log, pitch_log, pitch_des_log, q_log, qd_log, qdd_log, tau_log):
     # Transpose the stacked arrays to plot correctly
     q_log = np.array(q_log).T
     qd_log = np.array(qd_log).T
     qdd_log = np.array(qdd_log).T
-    q_des_log = np.array(q_des_log).T
-    qd_des_log = np.array(qd_des_log).T
-    qdd_des_log = np.array(qdd_des_log).T
     tau_log = np.array(tau_log).T
 
     # plot joint variables in 4 graphs
-    plotJoint('position', time_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log)
+    plotJoint(name='position', time_log=time_log, q_log=q_log, qd_log=qd_log, qdd_log=qdd_log, tau_log=tau_log)
     plt.figure(1)
-    plotJoint('velocity', time_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log)
+    plotJoint(name='velocity', time_log=time_log, q_log=q_log, qd_log=qd_log, qdd_log=qdd_log, tau_log=tau_log)
     plt.figure(2)
-    plotJoint('acceleration', time_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log)
+    plotJoint(name='acceleration', time_log=time_log, q_log=q_log, qd_log=qd_log, qdd_log=qdd_log, tau_log=tau_log)
     plt.figure(3)
-    plotJoint('torque', time_log, q_log, q_des_log, qd_log, qd_des_log, qdd_log, qdd_des_log, tau_log)
+    plotJoint(name='torque', time_log=time_log, q_log=q_log, qd_log=qd_log, qdd_log=qdd_log, tau_log=tau_log)
     plt.figure(4)
     input("Press enter to continue")
     pos_error = np.linalg.norm(p_log - p_des_log, axis=1)
