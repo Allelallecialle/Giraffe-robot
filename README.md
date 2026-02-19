@@ -1,7 +1,7 @@
 # Giraffe-robot
 This is the final project for the "Introduction to Robotics" course of Unitn. It focuses on the design and control of a giraffe robot to automate microphone handling during Q&A sessions at talks in conference rooms. All the details can be found in the `giraffe_robot.pdf` file.
 
-![alt text](https://github.com/Allelallecialle/Giraffe-robot/blob/main/robot_image.png?raw=true)
+![alt text](https://github.com/Allelallecialle/Giraffe-robot/blob/main/task_space_giraffe.png?raw=true)
 
 ## How to run the code
 To initialize the ROS environment:
